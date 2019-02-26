@@ -11,6 +11,7 @@
 
 #define STATIONARY 0
 #define MOVING 1
+#define WON 2
 
 volatile int _status = 0;
 
@@ -36,16 +37,20 @@ volatile int _status = 0;
 //}
 //}
 
-//SecondLast
-//xTaskAudio() {
-//	for(;;) {
-	//	if (status="won") playVictorySong();
-	//	else playBabyShark();
-//	}
-//}
+// leastPriority
+void xTaskAudio(void *p) {
+	// do I need to vTaskDelay?
+	// else fills up every non-contested time
+	// energy cost?
+	for(;;) {
+		if (_status=WON) playVictorySong();
+		else playBabyShark();
+	}
+}
 
 // leastPriority
 // where in the project structure to put the tasks?
+// todo: test
 void xTaskLED(void *p) {
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	const TickType_t xRedLEDMovingFreq = 500;
@@ -55,6 +60,7 @@ void xTaskLED(void *p) {
 			greenRunning();	//??CANTHEYBESYNCHRONOUS?
 			toggleRed();
 			vTaskDelayUntil(&xLastWakeTime, xRedLEDMovingFreq);
+			//can you use this inside scheduled tasks only
 		}
 		else if (_status=STATIONARY) {
 			greenOn();
@@ -75,7 +81,11 @@ void setup() {
 }
 
 void loop() {
+
 	//create tasks
 	xTaskCreate(xTaskLED, "TaskLED", STACK_SIZE, NULL, 1, NULL);
-	//create scheduler
+	xTaskCreate(xTaskAudio, "TaskAudio", STACK_SIZE, NULL, 1, NULL);
+
+	//create scheduler, RMS right now
+	vTaskStartScheduler();
 }
