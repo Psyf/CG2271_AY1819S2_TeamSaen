@@ -1,9 +1,13 @@
 #include <Arduino.h>
 #include <avr/io.h>
-#include "audioDriver.h"
 #include <FreeRTOS.h>
 #include <task.h>
 #define STACK_SIZE 200
+
+#include "audioDriver.h"
+#include "ledDriver.h"
+#include "motorDriver.h"
+#include "bluetoothDriver.h"
 
 #define STATIONARY 0
 #define MOVING 1
@@ -40,7 +44,8 @@ volatile int _status = 0;
 //	}
 //}
 
-//leastPriority
+// leastPriority
+// where in the project structure to put the tasks?
 void xTaskLED(void *p) {
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	const TickType_t xRedLEDMovingFreq = 500;
@@ -71,5 +76,6 @@ void setup() {
 
 void loop() {
 	//create tasks
+	xTaskCreate(xTaskLED, "TaskLED", STACK_SIZE, NULL, 1, NULL);
 	//create scheduler
 }
