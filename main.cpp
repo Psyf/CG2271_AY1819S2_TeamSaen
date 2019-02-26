@@ -5,6 +5,11 @@
 #include <task.h>
 #define STACK_SIZE 200
 
+#define STATIONARY 0
+#define MOVING 1
+
+volatile int _status = 0;
+
 // taskFunctions with logic inside
 
 //HighestPriority
@@ -36,20 +41,26 @@
 //}
 
 //leastPriority
-/*xTaskLED() {
-	for(;;) {
-		if (status=moving) {
-			greenRunning();	??CANTHEYBESYNCHRONOUS?
+void xTaskLED(void *p) {
+	TickType_t xLastWakeTime = xTaskGetTickCount();
+	const TickType_t xRedLEDMovingFreq = 500;
+	const TickType_t xRedLEDStationaryFreq = 250;
+	for(;;) {	// why not use while(1)?
+		if (_status=MOVING) {
+			greenRunning();	//??CANTHEYBESYNCHRONOUS?
 			toggleRed();
-			sleepFor250;
+			vTaskDelayUntil(&xLastWakeTime, xRedLEDMovingFreq);
 		}
-		else {
+		else if (_status=STATIONARY) {
 			greenOn();
 			toggleRed();
-			sleepFor500();
+			vTaskDelayUntil(&xLastWakeTime, xRedLEDStationaryFreq);
+		}
+		else {
+			// can we somehow log when _status is wrong?
 		}
 	}
-}*/
+}
 
 void setup() {
 	setupMotors();
