@@ -19,15 +19,18 @@ volatile int _status = 0;
 
 //HighestPriority
 //Ideally being handled by an interrupt
-//xTaskBluetooth() {
-//	for (;;) {
-	//	if msg.ready()
-	// 		readMsg()
-	// 		parseMsg()
-	// 		changeStatus()
-	// 		!!!Chance to think about interTaskCommunication!!!
-//	}
-//}
+void xTaskBluetooth(void *p) {
+	for (;;) {
+		String msgFromApp = receiveCommand();
+		if (msgFromApp!="None") {
+			Serial.println(msgFromApp);
+			//Parse(msgFromApp)
+			//TakeAction
+		}
+	}
+	 		//!!!Chance to think about interTaskCommunication!!!
+}
+
 
 // SecondHighestPriority?
 //xTaskMotor() {
@@ -78,6 +81,8 @@ void setup() {
 	setupBluetooth();
 	setupLED();
 	setupAudio();
+
+	Serial.begin(9600);
 }
 
 void loop() {
@@ -85,7 +90,8 @@ void loop() {
 	//create tasks
 	xTaskCreate(xTaskLED, "TaskLED", STACK_SIZE, NULL, 1, NULL);
 	xTaskCreate(xTaskAudio, "TaskAudio", STACK_SIZE, NULL, 1, NULL);
-
+	xTaskCreate(xTaskBluetooth, "TaskBluethooth", STACK_SIZE, NULL, 3, NULL);
 	//create scheduler, RMS right now
 	vTaskStartScheduler();
 }
+
