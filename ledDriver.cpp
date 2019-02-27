@@ -2,7 +2,7 @@
 #include <avr/io.h>
 #include "ledDriver.h"
 
-#define PIN_RED 5
+#define PIN_RED 2
 #define PIN_GREEN 7
 
 int redOn = 0;

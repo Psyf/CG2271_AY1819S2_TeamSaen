@@ -20,10 +20,11 @@ volatile int _status = 0;
 //HighestPriority
 //Ideally being handled by an interrupt
 void xTaskBluetooth(void *p) {
+	TickType_t lastWakeTime = xTaskGetTickCount();
 	for (;;) {
-		String msgFromApp = receiveCommand();
-		if (msgFromApp!="None") {
-			Serial.println(msgFromApp);
+		// Serial.println not fast enough, use Serial.write(byte)
+		char* msgFromApp = receiveCommand();
+		if (msgFromApp[0]!='\0') {
 			//Parse(msgFromApp)
 			//TakeAction
 		}
@@ -46,7 +47,7 @@ void xTaskAudio(void *p) {
 	// else fills up every non-contested time
 	// energy cost?
 	for(;;) {
-		if (_status=WON) playVictorySong();
+		if (_status==WON) playVictorySong();
 		else playBabyShark();
 	}
 }
@@ -59,13 +60,13 @@ void xTaskLED(void *p) {
 	const TickType_t xRedLEDMovingFreq = 500;
 	const TickType_t xRedLEDStationaryFreq = 250;
 	for(;;) {	// why not use while(1)?
-		if (_status=MOVING) {
+		if (_status==MOVING) {
 			greenRunning();	//??CANTHEYBESYNCHRONOUS?
 			toggleRed();
 			vTaskDelayUntil(&xLastWakeTime, xRedLEDMovingFreq);
 			//can you use this inside scheduled tasks only
 		}
-		else if (_status=STATIONARY) {
+		else if (_status==STATIONARY) {
 			greenOn();
 			toggleRed();
 			vTaskDelayUntil(&xLastWakeTime, xRedLEDStationaryFreq);
@@ -88,8 +89,10 @@ void setup() {
 void loop() {
 
 	//create tasks
-	xTaskCreate(xTaskLED, "TaskLED", STACK_SIZE, NULL, 1, NULL);
-	xTaskCreate(xTaskAudio, "TaskAudio", STACK_SIZE, NULL, 1, NULL);
+	// !! Creating more than 1 task stops Serial.
+	//xTaskCreate(xTaskLED, "TaskLED", STACK_SIZE, NULL, 1, NULL);
+	//xTaskCreate(xTaskAudio, "TaskAudio", STACK_SIZE, NULL, 1, NULL);
+	// Creating BTTask also ruins Serial for some reason.
 	xTaskCreate(xTaskBluetooth, "TaskBluethooth", STACK_SIZE, NULL, 3, NULL);
 	//create scheduler, RMS right now
 	vTaskStartScheduler();

@@ -10,6 +10,8 @@
 #include <avr/io.h>
 #include "SoftwareSerial.h"	//fix or use hardwareSerial
 #include "bluetoothDriver.h"
+#include <FreeRTOS.h>
+#include <task.h>
 #include <String.h>
 
 SoftwareSerial btSerial(12, 13); // RX, TX
@@ -18,15 +20,30 @@ void setupBluetooth() {
 	btSerial.begin(9600);
 }
 
-// Have to fix this
+//right now can receive strictly less than 5 chars
+// btSerial.available = 0 within a String.
+// The code might be too fast, or being preempted?
+//
 char* receiveCommand() {
-	  char* msgFromApp;
+	  TickType_t lastWakeTime = xTaskGetTickCount();
+	  char* msgFromApp = '\0';
+	  int i;
 	  if (btSerial.available()) {
-		  Serial.println(btSerial.read());
-	  } else {
-		  msgFromApp = (char*) "None";
+		  i=0;
+		  char c;
+		  while (btSerial.available() > 0) {
+			  c = (char) btSerial.read();
+			  msgFromApp[i++] = c;
+			  Serial.write(msgFromApp[i-1]);
+		  }
+		  msgFromApp[i] = '\0';
+		  Serial.write('.');
+		  return msgFromApp;
 	  }
-	  return msgFromApp;
+	  else {
+		  return '\0';
+	  }
+
 }
 
 void sendMessage(char *msgFromDevice) {
