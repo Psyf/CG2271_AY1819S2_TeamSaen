@@ -8,42 +8,25 @@
 
 #include <Arduino.h>
 #include <avr/io.h>
-#include "SoftwareSerial.h"	//fix or use hardwareSerial
+#include "SoftwareSerial.h"
 #include "bluetoothDriver.h"
 #include <FreeRTOS.h>
 #include <task.h>
 #include <String.h>
 
-SoftwareSerial btSerial(12, 13); // RX, TX
+// Software Serial is poor beyond 9600, is blocking too, takes too much time
+// Consider switching to Hardware+Interrupt
+SoftwareSerial btSerial(2, 3); // RX, TX
 
 void setupBluetooth() {
 	btSerial.begin(9600);
 }
 
-//right now can receive strictly less than 5 chars
-// btSerial.available = 0 within a String.
-// The code might be too fast, or being preempted?
-//
-char* receiveCommand() {
-	  TickType_t lastWakeTime = xTaskGetTickCount();
-	  char* msgFromApp = '\0';
-	  int i;
+char receiveChar() {
 	  if (btSerial.available()) {
-		  i=0;
-		  char c;
-		  while (btSerial.available() > 0) {
-			  c = (char) btSerial.read();
-			  msgFromApp[i++] = c;
-			  Serial.write(msgFromApp[i-1]);
-		  }
-		  msgFromApp[i] = '\0';
-		  Serial.write('.');
-		  return msgFromApp;
+		  return (char) btSerial.read();
 	  }
-	  else {
-		  return '\0';
-	  }
-
+	  else return '\0';
 }
 
 void sendMessage(char *msgFromDevice) {

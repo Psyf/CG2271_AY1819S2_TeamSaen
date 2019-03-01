@@ -1,3 +1,3 @@
 void setupBluetooth();
-char* receiveCommand();
+char receiveChar();
 void sendMessage(char *msgFromDevice);
