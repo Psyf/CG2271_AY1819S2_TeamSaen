@@ -8,28 +8,25 @@
 
 #include <Arduino.h>
 #include <avr/io.h>
-#include "SoftwareSerial.h"
 #include "bluetoothDriver.h"
 #include <FreeRTOS.h>
 #include <task.h>
 #include <String.h>
-
-// Software Serial is poor beyond 9600, is blocking too, takes too much time
-// Consider switching to Hardware+Interrupt
-SoftwareSerial btSerial(2, 3); // RX, TX
+#include "ledDriver.h"
 
 void setupBluetooth() {
-	btSerial.begin(9600);
+	Serial.begin(9600);
 }
 
 char receiveChar() {
-	  if (btSerial.available()) {
-		  return (char) btSerial.read();
+	  if (Serial.available()) {
+		  //toggleDebug(); //Tested: SerialIsAvailable.
+		  return (char) Serial.read();
 	  }
 	  else return '\0';
 }
 
 void sendMessage(char *msgFromDevice) {
-	btSerial.write(msgFromDevice);
+	Serial.write(msgFromDevice);
 }
 

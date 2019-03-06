@@ -60,23 +60,23 @@ void xTaskBluetooth(void *p) {
 		// if Delimiter,
 		// since HC-06 doesn't use /r or /n
 		if (c == '.') {
-			//TODO: [BUG] 	For first ever message, first char becomes non-printable
-			// 				For subsequent messages, first char is non-print, but all chars reserved.
 			if (msg.length() == MESSAGE_LEN) {
+				//toggleDebug(); //Gets the right DELIMITER and gets the right MESSAGE_LEN
 				//TODO: Look into pointer issue and memAlloc issue
 			    char char_array[MESSAGE_LEN+1];
 			    strcpy(char_array, msg.c_str());
-				if (xQueueSendToBack(xMotorCommandQueue, (void *) char_array, 5) != pdTRUE) {
+			    //Serial.write(char_array); //WT*: only works if toggleDebug() is above this ???
+			    //Serial.write('\n');
+				if (char_array[2] == '3') toggleDebug();
+			    if (xQueueSendToBack(xMotorCommandQueue, (void *) char_array, 5) != pdTRUE) {
 					//TODO: Warn about Full xMotorCommandQueue
 				}
 			} else {
 				//TODO: Warn about wrong length of reception
 			}
-			if(msg[3]=='3') toggleDebug();
 			msg = "";
 		}
-
-		if (c != '\0') {
+		else if (c != '\0') {
 			msg += c;
 		}
 		vTaskDelayUntil(&lastWakeTime, 1);	//@9600, characters come ~1ms apart
@@ -163,14 +163,14 @@ void setup() {
 void loop() {
 	//putting a low priority might always block these 3
 	//xTaskCreate(xTaskDebugger, "TaskDebugger", STACK_SIZE, NULL, 1, NULL);
-	//xTaskCreate(xTaskLED, "TaskLED", STACK_SIZE, NULL, 2, NULL);
-	//xTaskCreate(xTaskAudio, "TaskAudio", STACK_SIZE, NULL, 2, NULL);
+	xTaskCreate(xTaskLED, "TaskLED", STACK_SIZE, NULL, 2, NULL);
+	xTaskCreate(xTaskAudio, "TaskAudio", STACK_SIZE, NULL, 2, NULL);
 
 	// Putting TaskBluetooth higher than xTaskMotor might be dangerous
 	// Solution1: xTaskBluetooth is MUTEX with Serial RX ISR
 	// Solution2: xTaskMotor and xTaskBletooth hold same MUTEX (solution by Priority Inversion)
 	// Solution3: Since xTaskMotor depends on xTaskBluetooth sending data, put xTaskMotor higher
-	//xTaskCreate(xTaskMotor, "TaskMotor", STACK_SIZE, NULL, 3, NULL);
+	xTaskCreate(xTaskMotor, "TaskMotor", STACK_SIZE, NULL, 3, NULL);
 	xTaskCreate(xTaskBluetooth, "TaskBluethooth", STACK_SIZE, NULL, 4, NULL);
 
 	//create scheduler, RMS right now
