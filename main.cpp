@@ -72,6 +72,7 @@ void xTaskBluetooth(void *p) {
 			} else {
 				//TODO: Warn about wrong length of reception
 			}
+			if(msg[3]=='3') toggleDebug();
 			msg = "";
 		}
 
@@ -111,6 +112,7 @@ void xTaskMotor(void *p) {
 void xTaskAudio(void *p) {
 	int status = STATIONARY;
 	for(;;) {
+		//TODO: [BUG] Nothing will start until some command sent
 		xQueueReceive(xAudioStatusQueue, &status, 0); //non-blocking
 
 		//if (status == 1) toggleDebug(); //SANITY_CHECK: Proves msgQ working
@@ -129,6 +131,7 @@ void xTaskLED(void *p) {
 	int status = STATIONARY;
 
 	for(;;) {
+		//TODO: [BUG] Nothing will start until some command sent
 		xQueueReceive(xLEDStatusQueue, &status, 0); //non-blocking
 		//if (status == 1) toggleDebug(); //SANITY_CHECK: Proves msgQ working
 
@@ -154,21 +157,20 @@ void setup() {
 	setupBluetooth();
 	setupLED();
 	setupAudio();
-
-	Serial.begin(9600);
+	//Serial.begin(9600); //for Serial xTaskDebugger
 }
 
 void loop() {
 	//putting a low priority might always block these 3
 	//xTaskCreate(xTaskDebugger, "TaskDebugger", STACK_SIZE, NULL, 1, NULL);
-	xTaskCreate(xTaskLED, "TaskLED", STACK_SIZE, NULL, 2, NULL);
-	xTaskCreate(xTaskAudio, "TaskAudio", STACK_SIZE, NULL, 2, NULL);
+	//xTaskCreate(xTaskLED, "TaskLED", STACK_SIZE, NULL, 2, NULL);
+	//xTaskCreate(xTaskAudio, "TaskAudio", STACK_SIZE, NULL, 2, NULL);
 
 	// Putting TaskBluetooth higher than xTaskMotor might be dangerous
 	// Solution1: xTaskBluetooth is MUTEX with Serial RX ISR
 	// Solution2: xTaskMotor and xTaskBletooth hold same MUTEX (solution by Priority Inversion)
 	// Solution3: Since xTaskMotor depends on xTaskBluetooth sending data, put xTaskMotor higher
-	xTaskCreate(xTaskMotor, "TaskMotor", STACK_SIZE, NULL, 3, NULL);
+	//xTaskCreate(xTaskMotor, "TaskMotor", STACK_SIZE, NULL, 3, NULL);
 	xTaskCreate(xTaskBluetooth, "TaskBluethooth", STACK_SIZE, NULL, 4, NULL);
 
 	//create scheduler, RMS right now
