@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <avr/io.h>
 #include "audioDriver.h"
-#define SPEAKER_PIN 5
+#define SPEAKER_PIN 11
 
 // import the notes as freq from the internet
 void setupAudio() {

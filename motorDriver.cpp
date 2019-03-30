@@ -6,7 +6,6 @@
 #define LEFT_MOTORS_BACKWARD 10
 #define RIGHT_MOTORS_FORWARD 6
 #define RIGHT_MOTORS_BACKWARD 9
-#define SLOWDOWN 50
 
 void setupMotors() {
 	pinMode(LEFT_MOTORS_FORWARD, OUTPUT);
@@ -24,37 +23,6 @@ void stop() {
 	analogWrite(RIGHT_MOTORS_BACKWARD, LOW);
 }
 
-void moveForward(int speed) {
-	if (speed > 255) speed = 255;
-	else if (speed < 0) speed = 0;
-	stop();
-	analogWrite(LEFT_MOTORS_FORWARD, speed);
-	analogWrite(RIGHT_MOTORS_FORWARD, speed);
-}
-
-void moveBackward(int speed) {
-	if (speed > 255) speed = 255;
-	else if (speed < 0) speed = 0;
-	stop();
-	analogWrite(LEFT_MOTORS_BACKWARD, speed);
-	analogWrite(RIGHT_MOTORS_BACKWARD, speed);
-}
-
-void moveLeft(int speed) {
-	if (speed > 255) speed = 255;
-	else if (speed < 0) speed = 0;
-	stop();
-	analogWrite(LEFT_MOTORS_FORWARD, speed-SLOWDOWN);
-	analogWrite(RIGHT_MOTORS_FORWARD, speed);
-}
-
-void moveRight(int speed) {
-	if (speed > 255) speed = 255;
-	else if (speed < 0) speed = 0;
-	stop();
-	analogWrite(LEFT_MOTORS_FORWARD, speed);
-	analogWrite(RIGHT_MOTORS_FORWARD, speed-SLOWDOWN);
-}
 void setpower(unsigned int leftforward,unsigned int leftbackward, unsigned int rightforward, unsigned int rightbackward){
 	analogWrite(LEFT_MOTORS_FORWARD, leftforward);
 	analogWrite(LEFT_MOTORS_BACKWARD, leftbackward);
