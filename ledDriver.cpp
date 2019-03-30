@@ -4,7 +4,6 @@
 
 #define DEBUG_LED 2
 #define PIN_RED 4
-#define PIN_GREEN 7
 #define CLK 12 //IC pin 11
 #define LATCH 8 //IC pin 12
 #define DATA 13 //IC pin 14
@@ -16,7 +15,6 @@ int debugOn = 0;
 // I'm thinking shiftRegister plus Mode
 void setupLED() {
 	pinMode(PIN_RED, OUTPUT);
-	pinMode(PIN_GREEN, OUTPUT);
 	pinMode(DEBUG_LED, OUTPUT);
 	pinMode(CLK,OUTPUT);
 	pinMode(LATCH,OUTPUT);
