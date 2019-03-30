@@ -2,10 +2,10 @@
 #include <avr/io.h>
 #include "motorDriver.h"
 
-#define LEFT_MOTORS_FORWARD 11
+#define LEFT_MOTORS_FORWARD 9
 #define LEFT_MOTORS_BACKWARD 10
-#define RIGHT_MOTORS_FORWARD 9
-#define RIGHT_MOTORS_BACKWARD 6
+#define RIGHT_MOTORS_FORWARD 11
+#define RIGHT_MOTORS_BACKWARD 3
 #define SLOWDOWN 50
 
 void setupMotors() {
@@ -55,3 +55,10 @@ void moveRight(int speed) {
 	analogWrite(LEFT_MOTORS_FORWARD, speed);
 	analogWrite(RIGHT_MOTORS_FORWARD, speed-SLOWDOWN);
 }
+void setpower(unsigned int leftforward,unsigned int leftbackward, unsigned int rightforward, unsigned int rightbackward){
+	analogWrite(LEFT_MOTORS_FORWARD, leftforward);
+	analogWrite(LEFT_MOTORS_BACKWARD, leftbackward);
+	analogWrite(RIGHT_MOTORS_FORWARD, rightforward);
+	analogWrite(RIGHT_MOTORS_BACKWARD, rightbackward);
+}
+

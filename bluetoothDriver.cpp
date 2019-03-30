@@ -27,6 +27,6 @@ char receiveChar() {
 }
 
 void sendMessage(char *msgFromDevice) {
-	Serial.write(msgFromDevice);
+	Serial.write(msgFromDevice,sizeof(msgFromDevice));
 }
 
