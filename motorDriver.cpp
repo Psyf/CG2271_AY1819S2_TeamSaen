@@ -2,10 +2,10 @@
 #include <avr/io.h>
 #include "motorDriver.h"
 
-#define LEFT_MOTORS_FORWARD 9
+#define LEFT_MOTORS_FORWARD 5
 #define LEFT_MOTORS_BACKWARD 10
-#define RIGHT_MOTORS_FORWARD 11
-#define RIGHT_MOTORS_BACKWARD 3
+#define RIGHT_MOTORS_FORWARD 6
+#define RIGHT_MOTORS_BACKWARD 9
 #define SLOWDOWN 50
 
 void setupMotors() {
