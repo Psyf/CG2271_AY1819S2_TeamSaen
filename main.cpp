@@ -14,24 +14,24 @@
 #include "bluetoothDriver.h"
 
 //TODO: put in separate file as enum
-#define STATIONARY 0
-#define MOVING 1
-#define WON 2
+#define STATIONARY 'S'
+#define MOVING 'M'
+#define WON 'W'
 
 //TODO: ReEvaluate
-#define MESSAGE_LEN 5
+#define MESSAGE_LEN 6
 
 // Poster: xTaskBluetooth
 // Taker: xTaskMotor
 // Single item Queue because we should ensure xTaskMotor is never too late in responding.
 // Ideally, make sure item in queue is taken care of before next item comes in (t>MESSAGE_LENms)
-QueueHandle_t xMotorCommandQueue = xQueueCreate(1, sizeof(int)*MESSAGE_LEN);
+QueueHandle_t xMotorCommandQueue = xQueueCreate(1, sizeof(char)*MESSAGE_LEN);
 
 // Poster: xTaskMotor
 // Taker: xTaskLED and xTaskAudio respectively
 // Single item Queue again because should be responsive enough
-QueueHandle_t xLEDStatusQueue = xQueueCreate(1, sizeof(int));
-QueueHandle_t xAudioStatusQueue = xQueueCreate(1, sizeof(int));
+QueueHandle_t xLEDStatusQueue = xQueueCreate(1, sizeof(char));
+QueueHandle_t xAudioStatusQueue = xQueueCreate(1, sizeof(char));
 
 // Poster: All other Task
 // Taker: xTaskDebugger
@@ -53,40 +53,49 @@ void xTaskDebugger(void *p) {
 //TODO: Do by Interrupt();
 void xTaskBluetooth(void *p) {
 	TickType_t lastWakeTime = xTaskGetTickCount();
-	String msg = "";
+	char buf[MESSAGE_LEN];
+	unsigned int ptr = 0;
 	for (;;) {
-		char c = receiveChar();
+		for(int i=0; i<MESSAGE_LEN; i++){
+			char c = receiveChar();
+			// if Delimiter,
+			// since HC-06 doesn't use /r or /n
+			if (c != '\0') {
+					buf[ptr++] = c;
+			}
 
-		// if Delimiter,
-		// since HC-06 doesn't use /r or /n
-		if (c == '.') {
-			if (msg.length() == MESSAGE_LEN) {
+			if (c == '.' ) {
+				if (ptr == MESSAGE_LEN){ //send to Q
+					char char_array[MESSAGE_LEN-1]; // stripping the .
+					memcpy(char_array,buf, sizeof(char_array));
+					if (xQueueSendToBack(xMotorCommandQueue, (void *) &char_array, 5) == errQUEUE_FULL) {
+						//TODO: Warn about Full xMotorCommandQueue
+						}
+					}
+				//clear buffers
+				memset(buf,0,sizeof(buf));
+				ptr=0;
 				//toggleDebug(); //Gets the right DELIMITER and gets the right MESSAGE_LEN
 				//TODO: Look into pointer issue and memAlloc issue
-			    char char_array[MESSAGE_LEN+1];
-			    strcpy(char_array, msg.c_str());
-			    //Serial.write(char_array); //WT*: only works if toggleDebug() is above this ???
-			    //Serial.write('\n');
-				if (char_array[2] == '3') toggleDebug();
-			    if (xQueueSendToBack(xMotorCommandQueue, (void *) char_array, 5) != pdTRUE) {
-					//TODO: Warn about Full xMotorCommandQueue
+				//strcpy(char_array, msg.c_str());
+				//Serial.write(char_array); //WT*: only works if toggleDebug() is above this ???
+				//Serial.write('\n');
+				//if (char_array[2] == '3') toggleDebug();
 				}
-			} else {
-				//TODO: Warn about wrong length of reception
 			}
-			msg = "";
-		}
-		else if (c != '\0') {
-			msg += c;
-		}
-		vTaskDelayUntil(&lastWakeTime, 1);	//@9600, characters come ~1ms apart
+		//reminder not to send '\0' over serial.
+		//scratch that 115200 baud has too much noise, 9600. Therefore Time taken for 6 bytes = 5.6ms~ , so we can send a heartbeat once every 10 ms, we can read
+		//the serial buffer once every 10 ms as well
+		vTaskDelayUntil(&lastWakeTime, 10);	//@9600, characters come ~1ms apart
 	}
 }
 
 
 void xTaskMotor(void *p) {
-	char command[MESSAGE_LEN+1];
-	int status;
+	char command[MESSAGE_LEN-1];
+	char status =0;
+	int leftMotorPwr;
+	int rightMotorPwr;
 	for (;;) {
 		xQueueReceive(xMotorCommandQueue, (void *) command, portMAX_DELAY);
 
@@ -95,9 +104,20 @@ void xTaskMotor(void *p) {
 		//Parse Command
 
 		// if-elseif-else
+		if (command[4] == 'S' ){
+			stop();
+			status=0;
+		}
+		else if (command[4] == 'M'){
+			setpower(command[0],command[1],command[2],command[3]);
+			status=0;
+		}
+		else if (command[4] == 'W' && ((command[1]+command[2]+command[3]+command[4] == 4))){
+
+		}
 		// Call Appropriate functions from MotorDriver.h
 		// change Status if needed
-		status = 1; //placeholder for testing
+		//status = 1; //placeholder for testing
 		if (xQueueSendToBack(xLEDStatusQueue, &status, 5) != pdTRUE) {
 			//TODO: Warn about Full xLEDStatusQueue for too long
 		}
@@ -157,7 +177,7 @@ void setup() {
 	setupBluetooth();
 	setupLED();
 	setupAudio();
-	//Serial.begin(9600); //for Serial xTaskDebugger
+	//Serial.begin(115200); //for Serial xTaskDebugger
 }
 
 void loop() {
