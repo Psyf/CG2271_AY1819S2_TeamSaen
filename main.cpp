@@ -18,6 +18,7 @@
 #define STATIONARY 'S'
 #define MOVING 'M'
 #define WON 'W'
+#define INIT 'I'
 
 // Fixed Message_Len depending on Protocol
 #define MESSAGE_LEN 6
@@ -41,12 +42,13 @@ void xTaskBluetooth(void *p) {
 	for (;;) {
 		for(int i=0; i<MESSAGE_LEN; i++){
 			char c = receiveChar();
-			// if Delimiter,
-			// since HC-06 doesn't use /r or /n
+
 			if (c != '\0') {
 					buf[ptr++] = c;
 			}
 
+			// if Delimiter,
+			// since HC-06 doesn't use /r or /n
 			if (c == '.' ) {
 				if (ptr == MESSAGE_LEN){ //send to Q
 					char char_array[MESSAGE_LEN-1]; // stripping the .
@@ -54,6 +56,8 @@ void xTaskBluetooth(void *p) {
 					if (xQueueSendToBack(xMotorCommandQueue, (void *) &char_array, 5) == errQUEUE_FULL) {
 						//TODO: Warn about Full xMotorCommandQueue
 						}
+					//TODO: if INIT MEssage, don't do anything for 1 second
+					//TODO: Has to be implemented app-side too
 					}
 				//clear buffers
 				memset(buf,0,sizeof(buf));
@@ -74,18 +78,20 @@ void xTaskMotor(void *p) {
 
 	for (;;) {
 		if (xQueueReceive(xMotorCommandQueue, (void *) command, 300) == pdFALSE) {
-			status = 'S'; 	//emergency breaks, if we  haven't received anything
-							// from the app in 300 ms (~ 15 missed packets)
+			status = STATIONARY; 	//emergency breaks, if we  haven't received anything
+									// from the app in 300 ms (~ 15 missed packets)
 		}
-		else status = command[4];
+		else {
+			status = command[4];
+		}
 
-		if (status == 'S' ){
+		if (status == STATIONARY ){
 			stop();
 		}
-		else if (status == 'M'){
+		else if (status == MOVING){
 			setpower(command[0],command[1],command[2],command[3]);
 		}
-		else if (status == 'W' && ((command[1]+command[2]+command[3]+command[4] == 4))){
+		else if (status == WON && ((command[1]+command[2]+command[3]+command[4] == 4))){
 			// do something
 		}
 
@@ -108,6 +114,7 @@ void xTaskAudio(void *p) {
 		xQueueReceive(xAudioStatusQueue, &status, 0); //non-blocking
 
 		if (status == WON) playVictorySong();
+		else if (status == INIT) playInitSong();
 		else playBabyShark();
 	}
 }
@@ -145,6 +152,15 @@ void xTaskLED(void *p) {
 			toggleRed();
 			vTaskDelayUntil(&xLastWakeTime, xRedLEDStationaryFreq);
 		}
+		else if (status == INIT) {	//2 green flashes
+			greenOn(B11111111);
+			vTaskDelayUntil(&xLastWakeTime, 250);
+			greenOn(B00000000);
+			vTaskDelayUntil(&xLastWakeTime, 250);
+			greenOn(B11111111);
+			vTaskDelayUntil(&xLastWakeTime, 250);
+		}
+
 		else {
 			//TODO: Warn Received Wrong status
 		}

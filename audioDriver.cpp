@@ -13,6 +13,10 @@ void playBabyShark() {
 	return;
 }
 
+void playInitSong() {
+	return;
+}
+
 // make victory song using notes
 void playVictorySong() {
 	return;
