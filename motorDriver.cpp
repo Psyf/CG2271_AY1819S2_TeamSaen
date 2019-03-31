@@ -23,6 +23,7 @@ void stop() {
 	analogWrite(RIGHT_MOTORS_BACKWARD, LOW);
 }
 
+//todo: @Sean, these are uint8_t and not unsigned int. Please check.
 void setpower(unsigned int leftforward,unsigned int leftbackward, unsigned int rightforward, unsigned int rightbackward){
 	analogWrite(LEFT_MOTORS_FORWARD, leftforward);
 	analogWrite(LEFT_MOTORS_BACKWARD, leftbackward);
