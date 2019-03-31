@@ -73,8 +73,11 @@ void xTaskMotor(void *p) {
 	char oldStatus = 0;
 
 	for (;;) {
-		xQueueReceive(xMotorCommandQueue, (void *) command, portMAX_DELAY);
-		status = command[4];
+		if (xQueueReceive(xMotorCommandQueue, (void *) command, 300) == pdFALSE) {
+			status = 'S'; 	//emergency breaks, if we  haven't received anything
+							// from the app in 300 ms (~ 15 missed packets)
+		}
+		else status = command[4];
 
 		if (status == 'S' ){
 			stop();
