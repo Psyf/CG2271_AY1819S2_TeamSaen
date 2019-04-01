@@ -10,17 +10,19 @@
 #include <semphr.h>
 #define STACK_SIZE 200
 
+// Include drivers for Devices
 #include "audioDriver.h"
 #include "ledDriver.h"
 #include "motorDriver.h"
 #include "bluetoothDriver.h"
 
-//TODO: put in separate file as enum
+// Status Definitions
 #define STATIONARY 'S'
 #define MOVING 'M'
 #define WON 'W'
+#define INIT 'I'
 
-//TODO: ReEvaluate
+// Fixed Message_Len depending on Protocol
 #define MESSAGE_LEN 6
 
 // Poster: xTaskBluetooth
@@ -35,24 +37,6 @@ QueueHandle_t xMotorCommandQueue = xQueueCreate(1, sizeof(char)*MESSAGE_LEN);
 QueueHandle_t xLEDStatusQueue = xQueueCreate(1, sizeof(char));
 QueueHandle_t xAudioStatusQueue = xQueueCreate(1, sizeof(char));
 
-// Poster: All other Task
-// Taker: xTaskDebugger
-// Use this queue to use Serial, for Debugging purposes
-// !!! Make sure to Null Terminate your char* !!!
-QueueHandle_t xDebuggerQueue = xQueueCreate(5, sizeof(char*));
-
-// !!! please Disable if using Hardware Serial0 for other purposes
-// TODO: [BUG] Serial won't run for more than 1 task.
-void xTaskDebugger(void *p) {
-	char* strPointer;
-	for(;;) {
-		xQueueReceive(xDebuggerQueue, &strPointer, portMAX_DELAY);
-		Serial.println(strPointer);
-	}
-}
-
-//HighestPriority
-//TODO: Do by Interrupt();
 void xTaskBluetooth(void *p) {
 	TickType_t lastWakeTime = xTaskGetTickCount();
 	char buf[MESSAGE_LEN];
@@ -60,12 +44,13 @@ void xTaskBluetooth(void *p) {
 	for (;;) {
 		for(int i=0; i<MESSAGE_LEN; i++){
 			char c = receiveChar();
-			// if Delimiter,
-			// since HC-06 doesn't use /r or /n
+
 			if (c != '\0') {
 					buf[ptr++] = c;
 			}
 
+			// if Delimiter,
+			// since HC-06 doesn't use /r or /n
 			if (c == '.' ) {
 				if (ptr == MESSAGE_LEN){ //send to Q
 					char char_array[MESSAGE_LEN-1]; // stripping the .
@@ -73,16 +58,12 @@ void xTaskBluetooth(void *p) {
 					if (xQueueSendToBack(xMotorCommandQueue, (void *) &char_array, 5) == errQUEUE_FULL) {
 						//TODO: Warn about Full xMotorCommandQueue
 						}
+					//TODO: if INIT MEssage, don't do anything for 1 second
+					//TODO: Has to be implemented app-side too
 					}
 				//clear buffers
 				memset(buf,0,sizeof(buf));
 				ptr=0;
-				//toggleDebug(); //Gets the right DELIMITER and gets the right MESSAGE_LEN
-				//TODO: Look into pointer issue and memAlloc issue
-				//strcpy(char_array, msg.c_str());
-				//Serial.write(char_array); //WT*: only works if toggleDebug() is above this ???
-				//Serial.write('\n');
-				//if (char_array[2] == '3') toggleDebug();
 				}
 			}
 		//reminder not to send '\0' over serial.
@@ -92,43 +73,43 @@ void xTaskBluetooth(void *p) {
 	}
 }
 
-
 void xTaskMotor(void *p) {
 	char command[MESSAGE_LEN-1];
-	char status = STATIONARY;
+	char status= STATIONARY;
+	char oldStatus = 0;
+
 	for (;;) {
-		xQueueReceive(xMotorCommandQueue, (void *) command, portMAX_DELAY);
+		if (xQueueReceive(xMotorCommandQueue, (void *) command, 300) == pdFALSE) {
+			status = STATIONARY; 	//emergency breaks, if we  haven't received anything
+									// from the app in 300 ms (~ 15 missed packets)
+		}
+		else {
+			status = command[4];
+		}
 
-		//if(command[3]=='3') toggleDebug(); //SANITY_CHECK: Proves the msgQ is working
-
-		//Parse Command
-
-		// if-elseif-else
-		if (command[4] == 'S' ){
+		if (status == STATIONARY ){
 			stop();
-			status=STATIONARY;
 		}
-		else if (command[4] == 'M'){
+		else if (status == MOVING){
 			setpower(command[0],command[1],command[2],command[3]);
-			status=MOVING;
 		}
-		else if (command[4] == 'W' && ((command[1]+command[2]+command[3]+command[4] == 4))){
+		else if (status == WON && ((command[1]+command[2]+command[3]+command[4] == 4))){
+			// do something
+		}
 
-		}
-		// Call Appropriate functions from MotorDriver.h
-		// change Status if needed
-		//status = 1; //placeholder for testing
-		if (xQueueSendToBack(xLEDStatusQueue, &status, 5) != pdTRUE) {
-			//TODO: Warn about Full xLEDStatusQueue for too long
-		}
-		if (xQueueSendToBack(xAudioStatusQueue, &status, 5) != pdTRUE) {
-			//TODO: Warn about Full xAudioStatusQueue for too long
+		// LED and Audio change ONLY IF status is changed
+		if (oldStatus != status) {
+			if (xQueueSendToBack(xLEDStatusQueue, &status, 5) != pdTRUE) {
+				//TODO: Warn about Full xLEDStatusQueue for too long
+			}
+			if (xQueueSendToBack(xAudioStatusQueue, &status, 5) != pdTRUE) {
+				//TODO: Warn about Full xAudioStatusQueue for too long
+			}
+			oldStatus = status;
 		}
 	}
 }
 
-
-// leastPriority
 void xTaskAudio(void *p) {
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	int status = STATIONARY;
@@ -136,7 +117,7 @@ void xTaskAudio(void *p) {
 	unsigned int winMusicPointer = 0;
 	for(;;) {
 		//TODO: [BUG] Nothing will start until some command sent
-		//xQueueReceive(xAudioStatusQueue, &status, 0); //non-blocking
+		xQueueReceive(xAudioStatusQueue, &status, 0); //non-blocking
 		if ( (status == STATIONARY) || (status == MOVING) || (status == STATIONARY)){;
 			if(playBabyShark(babySharkPointer++)){
 				babySharkPointer = 0;
@@ -149,29 +130,48 @@ void xTaskAudio(void *p) {
 	}
 }
 
-// leastPriority
 void xTaskLED(void *p) {
-	TickType_t xLastWakeTime = xTaskGetTickCount();
 	const TickType_t xRedLEDMovingFreq = 500;
 	const TickType_t xRedLEDStationaryFreq = 250;
 	int status = STATIONARY;
 
+	byte pattern[]=
+	{
+	B00000000,
+	B00011000,
+	B00111100,
+	B01111110,
+	B11111111,
+	};
+
+	int index =0;
+	int count=sizeof(pattern);
+
+	TickType_t xLastWakeTime = xTaskGetTickCount();
 	for(;;) {
-		//TODO: [BUG] Nothing will start until some command sent
 		xQueueReceive(xLEDStatusQueue, &status, 0); //non-blocking
-		//if (status == 1) toggleDebug(); //SANITY_CHECK: Proves msgQ working
 
 		if (status==MOVING) {
-			greenRunning();	//??CANTHEYBESYNCHRONOUS?
+			index++;
+			if(index>=count) index=0;
+			greenOn(pattern[index]);
 			toggleRed();
 			vTaskDelayUntil(&xLastWakeTime, xRedLEDMovingFreq);
-			//can you use this inside scheduled tasks only
 		}
 		else if (status==STATIONARY) {
-			greenOn();
+			greenOn(B11111111);
 			toggleRed();
 			vTaskDelayUntil(&xLastWakeTime, xRedLEDStationaryFreq);
 		}
+		else if (status == INIT) {	//2 green flashes
+			greenOn(B11111111);
+			vTaskDelayUntil(&xLastWakeTime, 250);
+			greenOn(B00000000);
+			vTaskDelayUntil(&xLastWakeTime, 250);
+			greenOn(B11111111);
+			vTaskDelayUntil(&xLastWakeTime, 250);
+		}
+
 		else {
 			//TODO: Warn Received Wrong status
 		}
@@ -183,13 +183,10 @@ void setup() {
 	setupBluetooth();
 	setupLED();
 	setupAudio();
-	//Serial.begin(115200); //for Serial xTaskDebugger
 }
 
 void loop() {
-	//putting a low priority might always block these 3
-	//xTaskCreate(xTaskDebugger, "TaskDebugger", STACK_SIZE, NULL, 1, NULL);
-	xTaskCreate(xTaskLED, "TaskLED", STACK_SIZE, NULL, 2, NULL);
+	xTaskCreate(xTaskLED, "TaskLED", STACK_SIZE, NULL, 1, NULL);
 	xTaskCreate(xTaskAudio, "TaskAudio", STACK_SIZE, NULL, 2, NULL);
 
 	// Putting TaskBluetooth higher than xTaskMotor might be dangerous

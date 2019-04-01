@@ -14,4 +14,5 @@
 
 void setupAudio();
 bool playBabyShark(unsigned int p);
+void playInitSong();
 void playVictorySong();

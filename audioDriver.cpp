@@ -11,6 +11,7 @@
 const char BABYSHARKMAIN[BABYSHARKMAINLEN] = {NOTE_D0,NOTE_D0,NOTE_D0,NOTE_D0,NOTE_E0,NOTE_E0,NOTE_E0,NOTE_E0,NOTE_G0,NOTE_X,NOTE_X,NOTE_X,NOTE_G0,NOTE_X,NOTE_G0,NOTE_X,NOTE_X,NOTE_X,NOTE_G0,NOTE_X,NOTE_G0,NOTE_X,NOTE_X,NOTE_X,NOTE_G0,NOTE_X,NOTE_G0,NOTE_X,NOTE_X,NOTE_X};
 const char BABYSHARKEND[BABYSHARKENDLEN] = {NOTE_D0,NOTE_D0,NOTE_D0,NOTE_D0,NOTE_E0,NOTE_E0,NOTE_E0,NOTE_E0,NOTE_F0,NOTE_X,NOTE_X,NOTE_X};
 
+
 // import the notes as freq from the internet
 void setupAudio(){
   //SET OC2A to output
@@ -20,7 +21,7 @@ void setupAudio(){
   TCCR0A &= ~(1<<COM0A1 | 1<<WGM00 | 1<<COM0A0 | 1<<COM0A0);
   TCCR0A |= ( 1<<WGM01 );
 
-  //setup TCCR2B - PRESCALAR SELECTION
+  //setup TCCR2B - PRESCALAR SELECTION->256
   TCCR0B &= ~(1<<FOC2A | 1<<FOC2B | 1<<WGM02 | 1<<CS01 | 1<<CS00);
   TCCR0B |= (1<<CS02);
 
@@ -71,6 +72,10 @@ bool playBabyShark(unsigned int p) {
 		return 1;
 	}
 	return 0;
+}
+
+void playInitSong() {
+	return;
 }
 
 // make victory song using notes

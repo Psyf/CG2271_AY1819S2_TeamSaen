@@ -2,10 +2,9 @@
 #include <avr/io.h>
 #include "motorDriver.h"
 
-#define SLOWDOWN 50
 
 //LEFT WHEEL | PORT B
-#define LEFT_MOTORS_FORWARD PB0   //Arduino pin9 //to be PB0 -pin 8
+#define LEFT_MOTORS_FORWARD PB0  //Arduino pin9 //to be PB0 -pin 8
 #define LEFT_MOTORS_BACKWARD PB1 //Arduino pin10 //to be PB1 -pin 9
 
 //RIGHT WHEEL | PORT D
@@ -65,37 +64,6 @@ void stop(){
   PORTB &= ~(1<<PB0 | 1<<PB1 | 1<< PB2 | 1<<PB3);
 }
 
-//void moveForward(int speed) {
-//	if (speed > 255) speed = 255;
-//	else if (speed < 0) speed = 0;
-//	stop();
-//	analogWrite(LEFT_MOTORS_FORWARD, speed);
-//	analogWrite(RIGHT_MOTORS_FORWARD, speed);
-//}
-//
-//void moveBackward(int speed) {
-//	if (speed > 255) speed = 255;
-//	else if (speed < 0) speed = 0;
-//	stop();
-//	analogWrite(LEFT_MOTORS_BACKWARD, speed);
-//	analogWrite(RIGHT_MOTORS_BACKWARD, speed);
-//}
-//
-//void moveLeft(int speed) {
-//	if (speed > 255) speed = 255;
-//	else if (speed < 0) speed = 0;
-//	stop();
-//	analogWrite(LEFT_MOTORS_FORWARD, speed-SLOWDOWN);
-//	analogWrite(RIGHT_MOTORS_FORWARD, speed);
-//}
-//
-//void moveRight(int speed) {
-//	if (speed > 255) speed = 255;
-//	else if (speed < 0) speed = 0;
-//	stop();
-//	analogWrite(LEFT_MOTORS_FORWARD, speed);
-//	analogWrite(RIGHT_MOTORS_FORWARD, speed-SLOWDOWN);
-//}
 
 void setpower(unsigned int leftforward,unsigned int leftbackward, unsigned int rightforward, unsigned int rightbackward){
   if ( ((leftforward > 1  && leftbackward > 1) || (rightforward > 1  && rightbackward > 1)) || (leftforward < 1  || leftbackward < 1 || rightforward < 1  && rightbackward < 1)){
