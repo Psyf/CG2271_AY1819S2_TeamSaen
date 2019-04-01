@@ -93,9 +93,7 @@ void xTaskBluetooth(void *p) {
 
 void xTaskMotor(void *p) {
 	char command[MESSAGE_LEN-1];
-	char status =0;
-	int leftMotorPwr;
-	int rightMotorPwr;
+	char status = STATIONARY;
 	for (;;) {
 		xQueueReceive(xMotorCommandQueue, (void *) command, portMAX_DELAY);
 
@@ -130,16 +128,22 @@ void xTaskMotor(void *p) {
 
 // leastPriority
 void xTaskAudio(void *p) {
+	TickType_t xLastWakeTime = xTaskGetTickCount();
 	int status = STATIONARY;
+	unsigned int babySharkPointer = 0;
+	unsigned int winMusicPointer = 0;
 	for(;;) {
 		//TODO: [BUG] Nothing will start until some command sent
 		xQueueReceive(xAudioStatusQueue, &status, 0); //non-blocking
-
-		//if (status == 1) toggleDebug(); //SANITY_CHECK: Proves msgQ working
-
-		//TODO: This won't work. @Sean please see.
-		if (status==WON) playVictorySong();
-		else playBabyShark();
+		if ( (status == STATIONARY) || (status == MOVING) || (status == STATIONARY)){;
+			if(playBabyShark(babySharkPointer++)){
+				babySharkPointer = 0;
+			}
+		}
+		else if ((status == WON)) {
+			;
+		}
+		vTaskDelayUntil(&xLastWakeTime, TIMEPERNOTE);
 	}
 }
 
