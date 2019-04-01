@@ -29,12 +29,12 @@
 		<link>
 			<name>arduino</name>
 			<type>2</type>
-			<location>C:/Program Files (x86)/Arduino/hardware/arduino/avr/cores/arduino</location>
+			<location>C:/Users/SEANY/Desktop/Year2Sem2/CG2271/Proj/CG2271_AY1819S2_TeamSaen/Custom Arduino Libraries/cores/arduino</location>
 		</link>
 		<link>
-			<name>standard</name>
+			<name>arduino/standard</name>
 			<type>2</type>
-			<location>C:/Program Files (x86)/Arduino/hardware/arduino/avr/variants/standard</location>
+			<location>C:/Users/SEANY/Desktop/Year2Sem2/CG2271/Proj/CG2271_AY1819S2_TeamSaen/Custom Arduino Libraries/variants/standard</location>
 		</link>
 	</linkedResources>
 </projectDescription>

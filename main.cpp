@@ -1,7 +1,9 @@
+#define __AVR_ATmega328P__
+
 #include <Arduino.h>
 #include <avr/io.h>
-#include <String.h>
-#include <string.h>
+//#include <String.h>
+//#include <string.h>
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
@@ -104,11 +106,11 @@ void xTaskMotor(void *p) {
 		// if-elseif-else
 		if (command[4] == 'S' ){
 			stop();
-			status=0;
+			status=STATIONARY;
 		}
 		else if (command[4] == 'M'){
 			setpower(command[0],command[1],command[2],command[3]);
-			status=0;
+			status=MOVING;
 		}
 		else if (command[4] == 'W' && ((command[1]+command[2]+command[3]+command[4] == 4))){
 
@@ -134,7 +136,7 @@ void xTaskAudio(void *p) {
 	unsigned int winMusicPointer = 0;
 	for(;;) {
 		//TODO: [BUG] Nothing will start until some command sent
-		xQueueReceive(xAudioStatusQueue, &status, 0); //non-blocking
+		//xQueueReceive(xAudioStatusQueue, &status, 0); //non-blocking
 		if ( (status == STATIONARY) || (status == MOVING) || (status == STATIONARY)){;
 			if(playBabyShark(babySharkPointer++)){
 				babySharkPointer = 0;
