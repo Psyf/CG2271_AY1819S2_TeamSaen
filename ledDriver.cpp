@@ -3,7 +3,6 @@
 #include <avr/pgmspace.h>
 #include "ledDriver.h"
 
-#define DEBUG_LED 3
 #define PIN_RED 2
 #define CLK A0 //IC pin 11 	ARDUINO 12<-- OLD  NEW -->4
 #define LATCH A1 //IC pin 12 ARDUINO 8<-- OLD  NEW -->5
@@ -15,8 +14,6 @@
 #define LEDPATTERN3 126
 #define LEDPATTERN4 255
 
-char redOn = 0;
-char debugOn = 0;
 
 //shifted pattern here. I think it think putting it in the task was creating some issues. Probably a stack overflow.
 //alternate shift of constants to .text memory is using progmem. However requires special functions to read from PROGMEM
@@ -34,7 +31,6 @@ const PROGMEM uint8_t pattern[]=
 // I'm thinking shiftRegister plus Mode
 void setupLED() {
 	pinMode(PIN_RED, OUTPUT);
-	pinMode(DEBUG_LED, OUTPUT);
 	pinMode(CLK,OUTPUT);
 	pinMode(LATCH,OUTPUT);
 	pinMode(DATA,OUTPUT);
@@ -60,8 +56,3 @@ bool toggleRed(bool state) {
 	return 1 - state;
 }
 
-//!!! Use at <= 1 line to preserve Sanity during SANITY_CHECKS
-void toggleDebug() {
-	debugOn = !debugOn;
-	digitalWrite(DEBUG_LED, debugOn);
-}
