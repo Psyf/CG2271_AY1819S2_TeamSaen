@@ -1,5 +1,7 @@
+
 void setupLED();
 void greenOn(uint8_t);
-void toggleRed();
+void greenPatternOut(uint8_t);
+bool toggleRed(bool state);
 void toggleDebug();
 
