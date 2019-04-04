@@ -139,7 +139,7 @@ void xTaskAudio(void *p) {
 			}
 			else if (song == WINSONG) {
 				if(playVictorySong(musicPointer++)){
-					musicPointer = 99;
+					musicPointer = 24;
 				}
 			}
 			else if (song == CONNECTSONG){
@@ -212,7 +212,7 @@ void setup() {
 void loop() {
 
 	xTaskCreate(xTaskLED, "TaskLED", 200, NULL, 1, NULL);
-	xTaskCreate(xTaskAudio, "TaskAudio", 300, NULL, 2, NULL);
+	xTaskCreate(xTaskAudio, "TaskAudio", 200, NULL, 2, NULL);
 
 	// Putting TaskBluetooth higher than xTaskMotor might be dangerous
 	// Solution1: xTaskBluetooth is MUTEX with Serial RX ISR

@@ -15,7 +15,7 @@
 #define NOTE_X 0
 #define BABYSHARKMAINLEN 30
 #define BABYSHARKENDLEN 12
-#define TIMEPERNOTE 125
+#define TIMEPERNOTE 100
 #define SPEAKE
 
 #define BBYSHARK 0
