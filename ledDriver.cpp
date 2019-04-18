@@ -6,7 +6,7 @@
 #define PIN_RED 2
 #define CLK A0 //IC pin 11 	ARDUINO 12<-- OLD  NEW -->4
 #define LATCH A1 //IC pin 12 ARDUINO 8<-- OLD  NEW -->5
-#define DATA A2 //IC pin 14  ARDUINO 13<-- OLD  NEW -->7
+#define DATA A3 //IC pin 14  ARDUINO 13<-- OLD  NEW -->7
 
 #define LEDPATTERN0 0
 #define LEDPATTERN1 24
@@ -18,6 +18,8 @@
 //shifted pattern here. I think it think putting it in the task was creating some issues. Probably a stack overflow.
 //alternate shift of constants to .text memory is using progmem. However requires special functions to read from PROGMEM
 //so id really that just put everything in a switch case statement.
+
+//Decided to use PROGMEM here and use the switch case statement elsewhere.
 const PROGMEM uint8_t pattern[]=
 {
 		LEDPATTERN0, //0000 0000

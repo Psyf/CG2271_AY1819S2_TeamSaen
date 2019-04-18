@@ -80,7 +80,8 @@ char statusToSong(char status){
 }
 
 //alternative way of storing data to .text. Don't worry, wrote a python script to generate the switch cases. not sure if this would be faster tho
-//than accessing progmem
+//than accessing progmem. either way, i like this way better, simply because i get to use my script. If you're grading this, pls do not take offence, the LEDs patterns are stored
+//using PROGMEM variable modifier, and read from PROGMEM via pgm_read_byte_near(). In fact, progmem is probably faster, but i like my python script. Also the switch cases look cool.
 int playBabySharkMAIN(unsigned int p){
 	switch(p){
 	    case 0:
